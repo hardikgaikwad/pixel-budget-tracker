@@ -3,7 +3,8 @@ import { Volume2, VolumeX, RotateCcw, Sparkles } from 'lucide-react';
 import { formatWeekRange, isCurrentWeek } from '../utils/date';
 
 /**
- * Pixel Header with weekly navigation and game HUD controls.
+ * Clean, Compact Header:
+ * Simple week navigation, retro piggy logo, and minimalist utility controls.
  */
 export default function Header({
   currentWeekKey,
@@ -19,16 +20,15 @@ export default function Header({
   const weekLabel = formatWeekRange(currentWeekKey);
 
   return (
-    <header className="w-full bg-black border-b-2 border-yellow pt-3 pb-3 px-4 md:px-8">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <header className="w-full bg-black border-b border-[#262626] py-3 px-4 md:px-6">
+      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
         
         {/* Left: App Logo & Title */}
-        <div className="flex items-center gap-3">
-          {/* Mini Pixel Pig Logo */}
-          <div className="w-10 h-10 border border-yellow bg-dark-900 flex items-center justify-center p-1 pixel-shadow-black">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 border border-yellow bg-[#0d0d0d] flex items-center justify-center p-0.5">
             <svg
-              width="28"
-              height="24"
+              width="20"
+              height="18"
               viewBox="0 0 32 26"
               shapeRendering="crispEdges"
             >
@@ -47,99 +47,82 @@ export default function Header({
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-pixel text-sm md:text-base text-yellow tracking-wider">
-                PIGGY//BANK
-              </h1>
-              <span className="bg-yellow text-black font-arcade text-[10px] px-1 font-bold">
-                v1.0
-              </span>
-            </div>
-            <p className="font-arcade text-xs text-text-muted tracking-wide mt-0.5">
-              YOUR WEEKLY MONEY QUEST
-            </p>
+            <span className="font-pixel text-xs text-yellow tracking-wider">
+              PIGGY//BANK
+            </span>
           </div>
         </div>
 
         {/* Center: Week Selector Navigation */}
-        <div className="flex flex-col items-center gap-1.5">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onPrevWeek}
-              className="pixel-btn-secondary px-2.5 py-1 text-xs"
-              title="Previous Week"
-              aria-label="Previous Week"
-            >
-              ◀ PREV
-            </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onPrevWeek}
+            className="pixel-btn-secondary px-2 py-1 text-xs"
+            title="Previous Week"
+            aria-label="Previous Week"
+          >
+            ◀
+          </button>
 
-            <div className="px-3 py-1 bg-dark-900 border border-yellow min-w-[200px] text-center">
-              <span className="font-arcade text-xs text-yellow tracking-wider font-bold">
-                {weekLabel}
-              </span>
-            </div>
-
-            <button
-              onClick={onNextWeek}
-              className="pixel-btn-secondary px-2.5 py-1 text-xs"
-              title="Next Week"
-              aria-label="Next Week"
-            >
-              NEXT ▶
-            </button>
+          <div className="px-3 py-1 bg-[#0d0d0d] border border-[#333] text-center min-w-[170px]">
+            <span className="font-arcade text-xs text-yellow tracking-wider font-bold">
+              {weekLabel}
+            </span>
           </div>
 
-          {/* Current Week Status / Reset Button */}
-          <div className="flex items-center gap-2 text-[11px] font-arcade">
-            {isCurrent ? (
-              <span className="text-yellow flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-yellow inline-block animate-blink" />
-                CURRENT ACTIVE WEEK
-              </span>
-            ) : (
-              <button
-                onClick={onResetToCurrentWeek}
-                className="text-text-muted hover:text-yellow underline flex items-center gap-1 transition-colors"
-              >
-                <span>[JUMP TO CURRENT WEEK]</span>
-              </button>
-            )}
-          </div>
+          <button
+            onClick={onNextWeek}
+            className="pixel-btn-secondary px-2 py-1 text-xs"
+            title="Next Week"
+            aria-label="Next Week"
+          >
+            ▶
+          </button>
+
+          {!isCurrent && (
+            <button
+              onClick={onResetToCurrentWeek}
+              className="text-[10px] font-arcade text-yellow hover:underline ml-1"
+              title="Jump to Current Week"
+            >
+              [TODAY]
+            </button>
+          )}
         </div>
 
-        {/* Right: Quick Tools (SFX, Demo Data, Reset) */}
-        <div className="flex items-center gap-2">
+        {/* Right: Quick Tools */}
+        <div className="flex items-center gap-1.5">
           {/* Sound Toggle */}
           <button
             onClick={onToggleSound}
-            className={`pixel-btn-secondary px-2.5 py-1.5 text-xs flex items-center gap-1.5 ${
-              soundEnabled ? 'text-yellow border-yellow' : 'text-text-dim border-border-subtle'
+            className={`p-1.5 border transition-colors ${
+              soundEnabled
+                ? 'border-yellow text-yellow bg-[#121200]'
+                : 'border-[#333] text-text-dim hover:text-white'
             }`}
-            title={soundEnabled ? 'Disable 8-bit Audio SFX' : 'Enable 8-bit Audio SFX'}
+            title={soundEnabled ? 'Mute 8-bit SFX' : 'Enable 8-bit SFX'}
             aria-label={soundEnabled ? 'Sound is on' : 'Sound is off'}
           >
             {soundEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
-            <span className="hidden sm:inline">SFX: {soundEnabled ? 'ON' : 'OFF'}</span>
           </button>
 
-          {/* Load Sample Demo Data */}
+          {/* Demo Data */}
           <button
             onClick={onLoadDemoData}
-            className="pixel-btn-secondary px-2 py-1.5 text-xs text-text-muted hover:text-yellow"
-            title="Load Demo Transactions & Budget"
+            className="px-2 py-1 text-[10px] font-arcade text-text-muted hover:text-yellow border border-[#333] hover:border-yellow transition-colors flex items-center gap-1"
+            title="Load sample transactions"
           >
-            <Sparkles size={13} className="text-yellow" />
-            <span className="hidden lg:inline">DEMO DATA</span>
+            <Sparkles size={11} className="text-yellow" />
+            <span>DEMO</span>
           </button>
 
-          {/* Reset All Data */}
+          {/* Reset */}
           <button
             onClick={onOpenResetModal}
-            className="pixel-btn-secondary px-2 py-1.5 text-xs text-text-muted hover:text-expense hover:border-expense"
-            title="Clear all local data"
+            className="p-1.5 text-text-dim hover:text-expense border border-[#333] hover:border-expense transition-colors"
+            title="Reset data"
           >
             <RotateCcw size={13} />
-            <span className="hidden lg:inline">RESET</span>
           </button>
         </div>
 

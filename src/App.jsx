@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Header from './components/Header';
 import BudgetOverview from './components/BudgetOverview';
-import BudgetControls from './components/BudgetControls';
 import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import PixelModal from './components/PixelModal';
@@ -9,16 +8,13 @@ import PixelModal from './components/PixelModal';
 import {
   getWeekKey,
   getPrevWeekKey,
-  getNextWeekKey,
-  isCurrentWeek,
-  formatWeekRange
+  getNextWeekKey
 } from './utils/date';
 import { calculateWeeklyTotals } from './utils/calculations';
 import { loadState, saveState, getSampleData, clearStorage } from './utils/storage';
 import { playCoinSound, playCashRegisterSound, playBlipSound } from './utils/sound';
 
 export default function App() {
-  // 1. Core State
   const initialData = useRef(loadState());
 
   const [currentWeekKey, setCurrentWeekKey] = useState(() => getWeekKey(new Date()));
@@ -26,9 +22,8 @@ export default function App() {
     if (initialData.current && initialData.current.budgets) {
       return initialData.current.budgets;
     }
-    // Default initial budget for active week
     const thisWeek = getWeekKey(new Date());
-    return { [thisWeek]: 7500 };
+    return { [thisWeek]: 8000 };
   });
 
   const [transactions, setTransactions] = useState(() => {
@@ -45,16 +40,16 @@ export default function App() {
     return true;
   });
 
-  // 2. Animation & Interaction State
+  // Animation states
   const [isDroppingCoin, setIsDroppingCoin] = useState(false);
   const [lastSavedAmount, setLastSavedAmount] = useState(0);
   const [recentlyAddedId, setRecentlyAddedId] = useState(null);
 
-  // 3. Modal State
+  // Modals
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
-  // 4. Persistence to localStorage
+  // Persistence
   useEffect(() => {
     saveState({
       budgets,
@@ -63,7 +58,7 @@ export default function App() {
     });
   }, [budgets, transactions, soundEnabled]);
 
-  // 5. Week-specific data filtering and calculations
+  // Current week data
   const weekTransactions = useMemo(() => {
     return transactions.filter((tx) => tx.weekKey === currentWeekKey);
   }, [transactions, currentWeekKey]);
@@ -74,7 +69,7 @@ export default function App() {
     return calculateWeeklyTotals(activeBudget, weekTransactions);
   }, [activeBudget, weekTransactions]);
 
-  // 6. Handlers
+  // Handlers
   const handlePrevWeek = () => {
     playBlipSound(soundEnabled);
     setCurrentWeekKey((prev) => getPrevWeekKey(prev));
@@ -103,20 +98,17 @@ export default function App() {
     setRecentlyAddedId(newTx.id);
 
     if (newTx.type === 'saved') {
-      // Trigger Coin Drop Animation & sound
       playCoinSound(soundEnabled);
       setLastSavedAmount(newTx.amount);
       setIsDroppingCoin(true);
       setTimeout(() => setIsDroppingCoin(false), 700);
     } else {
-      // Trigger Cash Register Animation & sound
       playCashRegisterSound(soundEnabled);
     }
 
-    // Clear recently added pulse after animation concludes
     setTimeout(() => {
       setRecentlyAddedId((curr) => (curr === newTx.id ? null : curr));
-    }, 1800);
+    }, 1500);
   };
 
   const handleUpdateTransaction = (updatedTx) => {
@@ -137,7 +129,6 @@ export default function App() {
     playCoinSound(soundEnabled);
     const demo = getSampleData();
     setBudgets((prev) => ({ ...prev, ...demo.budgets }));
-    // Merge or replace
     setTransactions((prev) => {
       const existingIds = new Set(prev.map((t) => t.id));
       const fresh = demo.transactions.filter((t) => !existingIds.has(t.id));
@@ -160,8 +151,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-warm flex flex-col pixel-grid-bg">
-      {/* 1. Header with Week Navigation & Tools */}
+    <div className="min-h-screen w-full bg-black text-[#f5f5f5] flex flex-col items-center pixel-grid-bg">
+      {/* 1. Header */}
       <Header
         currentWeekKey={currentWeekKey}
         onPrevWeek={handlePrevWeek}
@@ -173,25 +164,20 @@ export default function App() {
         onOpenResetModal={() => setIsResetModalOpen(true)}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Main Container - Centered, Focused, Breathable */}
+      <main className="w-full max-w-5xl flex-1 px-4 sm:px-6 py-6 md:py-8 space-y-6">
         
-        {/* 2. Centerpiece: Weekly Budget Overview */}
+        {/* 2. Visual Centerpiece: Piggy Bank + Remaining Budget + 3 Stats with Inline Budget Editor */}
         <BudgetOverview
           totals={weeklyTotals}
+          weekKey={currentWeekKey}
+          onSaveBudget={handleSaveBudget}
           isDroppingCoin={isDroppingCoin}
           lastSavedAmount={lastSavedAmount}
           onPiggyClick={handlePiggyClick}
         />
 
-        {/* 3. Weekly Budget Controls */}
-        <BudgetControls
-          weekKey={currentWeekKey}
-          currentBudget={activeBudget}
-          onSaveBudget={handleSaveBudget}
-        />
-
-        {/* 4. Split Section: Add Transaction Panel (Left) & Money Log (Right) */}
+        {/* 3. Transaction Actions: Form (Left) & History Log (Right) */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           
           {/* Add Transaction Form (5 cols on md+) */}
@@ -202,7 +188,7 @@ export default function App() {
             />
           </div>
 
-          {/* Transaction History / Money Log (7 cols on md+) */}
+          {/* Money Log (7 cols on md+) */}
           <div className="md:col-span-7">
             <TransactionList
               transactions={weekTransactions}
@@ -216,32 +202,29 @@ export default function App() {
 
       </main>
 
-      {/* Retro Footer */}
-      <footer className="w-full border-t border-border-subtle bg-black py-4 px-4 text-center text-xs text-text-dim font-arcade">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>PIGGY//BANK // RETRO WEEKLY BUDGET TRACKER</span>
-          <span className="text-yellow">ALL DATA PERSISTED LOCALLY IN STORAGE</span>
-        </div>
+      {/* Simple Footer */}
+      <footer className="w-full border-t border-[#1a1a1a] bg-black py-4 px-4 text-center text-xs text-text-dim font-arcade">
+        <span>PIGGY//BANK • RETRO WEEKLY BUDGET QUEST • LOCAL DATA STORAGE</span>
       </footer>
 
       {/* Delete Confirmation Modal */}
       <PixelModal
         isOpen={Boolean(deleteTarget)}
         title="DELETE TRANSACTION"
-        message={`Are you sure you want to delete "${deleteTarget?.description}"? This will immediately recalculate your weekly budget.`}
-        confirmLabel="DELETE ENTRY"
+        message={`Delete "${deleteTarget?.description}"? Your remaining budget will update immediately.`}
+        confirmLabel="DELETE"
         cancelLabel="CANCEL"
         isDanger={true}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
 
-      {/* Reset Storage Confirmation Modal */}
+      {/* Reset Confirmation Modal */}
       <PixelModal
         isOpen={isResetModalOpen}
-        title="RESET ALL DATA"
-        message="Are you sure you want to erase all weekly budgets, transactions, and saved settings? This cannot be undone."
-        confirmLabel="RESET EVERYTHING"
+        title="RESET EVERYTHING"
+        message="Clear all weekly budgets and transaction history? This cannot be undone."
+        confirmLabel="RESET"
         cancelLabel="CANCEL"
         isDanger={true}
         onConfirm={handleConfirmReset}

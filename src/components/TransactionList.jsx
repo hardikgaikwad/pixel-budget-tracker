@@ -3,8 +3,8 @@ import TransactionItem from './TransactionItem';
 import { parseISODate } from '../utils/date';
 
 /**
- * Money Log Transaction History Component.
- * Features type filtering, chronological sorting (newest first), and retro empty state.
+ * Simplified, Clean Money Log:
+ * Fast filters, clear chronological list, gentle pixel empty state.
  */
 export default function TransactionList({
   transactions = [],
@@ -14,7 +14,6 @@ export default function TransactionList({
 }) {
   const [filter, setFilter] = useState('all'); // 'all' | 'spent' | 'saved'
 
-  // Sort newest first by date and creation timestamp
   const sortedTransactions = useMemo(() => {
     return [...transactions].sort((a, b) => {
       const dateA = parseISODate(a.date).getTime();
@@ -24,7 +23,6 @@ export default function TransactionList({
     });
   }, [transactions]);
 
-  // Apply filter
   const filteredTransactions = useMemo(() => {
     if (filter === 'spent') {
       return sortedTransactions.filter((tx) => tx.type === 'spent');
@@ -35,67 +33,48 @@ export default function TransactionList({
     return sortedTransactions;
   }, [sortedTransactions, filter]);
 
-  const spentCount = transactions.filter((tx) => tx.type === 'spent').length;
-  const savedCount = transactions.filter((tx) => tx.type === 'saved').length;
-
   return (
-    <section className="w-full bg-dark-900 border border-border-medium p-4 md:p-5 pixel-shadow-black">
+    <section className="w-full bg-[#0a0a0a] border border-[#262626] p-4 md:p-5 pixel-shadow-black">
       
       {/* Header & Filter Tabs */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 mb-4 border-b border-border-subtle">
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#202020]">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-yellow inline-block" />
           <h2 className="font-arcade text-xs md:text-sm text-yellow tracking-wider font-bold">
             MONEY LOG
           </h2>
           <span className="font-arcade text-[10px] text-text-dim">
-            [{transactions.length} ENTRIES]
+            ({transactions.length})
           </span>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-2 py-1 text-[11px] font-arcade border transition-colors ${
-              filter === 'all'
-                ? 'bg-yellow text-black border-yellow font-bold'
-                : 'bg-black text-text-muted border-border-medium hover:text-yellow'
-            }`}
-          >
-            ALL ({transactions.length})
-          </button>
-          <button
-            onClick={() => setFilter('spent')}
-            className={`px-2 py-1 text-[11px] font-arcade border transition-colors ${
-              filter === 'spent'
-                ? 'bg-expense text-black border-expense font-bold'
-                : 'bg-black text-text-muted border-border-medium hover:text-expense'
-            }`}
-          >
-            SPENT ({spentCount})
-          </button>
-          <button
-            onClick={() => setFilter('saved')}
-            className={`px-2 py-1 text-[11px] font-arcade border transition-colors ${
-              filter === 'saved'
-                ? 'bg-yellow text-black border-yellow font-bold'
-                : 'bg-black text-text-muted border-border-medium hover:text-yellow'
-            }`}
-          >
-            SAVED ({savedCount})
-          </button>
+        {/* Filter Pills */}
+        <div className="flex items-center gap-1">
+          {['all', 'spent', 'saved'].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-2.5 py-1 text-[10px] font-arcade uppercase transition-colors border ${
+                filter === f
+                  ? f === 'spent'
+                    ? 'bg-expense text-black border-expense font-bold'
+                    : 'bg-yellow text-black border-yellow font-bold'
+                  : 'bg-black text-text-muted border-[#333] hover:text-white'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Transaction List or Empty State */}
       {filteredTransactions.length === 0 ? (
-        <div className="py-12 px-4 flex flex-col items-center justify-center text-center bg-black border border-dashed border-border-medium">
+        <div className="py-10 px-4 flex flex-col items-center justify-center text-center bg-black border border-[#1a1a1a]">
           {/* Waiting Pixel Pig Illustration */}
-          <div className="mb-3 opacity-75">
+          <div className="mb-2 opacity-50">
             <svg
-              width="64"
-              height="52"
+              width="48"
+              height="40"
               viewBox="0 0 32 26"
               shapeRendering="crispEdges"
             >
@@ -112,19 +91,17 @@ export default function TransactionList({
               <rect x="14" y="5" width="6" height="2" fill="#000000" />
             </svg>
           </div>
-          <p className="font-arcade text-xs text-yellow tracking-wider font-bold mb-1">
+          <p className="font-arcade text-xs text-text-muted font-bold mb-1">
             {filter === 'all'
-              ? 'NO COINS LOGGED THIS WEEK...'
-              : filter === 'spent'
-              ? 'NO EXPENSES RECORDED YET!'
-              : 'NO SAVINGS DEPOSITED YET!'}
+              ? 'NO TRANSACTIONS THIS WEEK'
+              : `NO ${filter.toUpperCase()} TRANSACTIONS`}
           </p>
-          <p className="font-mono text-xs text-text-dim max-w-xs">
-            Feed your piggy bank using the transaction form above to record your money quest.
+          <p className="font-mono text-xs text-text-dim">
+            Add an expense or saving to update your balance.
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
           {filteredTransactions.map((tx) => (
             <TransactionItem
               key={tx.id}
